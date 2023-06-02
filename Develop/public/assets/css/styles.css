@@ -7,6 +7,7 @@ body {
 
 .save-note {
   display: none;
+  
 }
 
 .icons i {
@@ -38,6 +39,7 @@ body {
 
 .note-title:read-only,
 .note-textarea:read-only {
+  display: block;
   color: #757575;
 }
 
