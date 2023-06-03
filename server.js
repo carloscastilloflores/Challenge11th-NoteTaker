@@ -15,11 +15,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', api);
 
 app.use(express.static('public'));
+// app.use('/static', express.static(path.join(__dirname, 'public')))
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, '/public/')));
+//app.use(express.static('public'));
+//app.use(express.static(path.join(__dirname, 'public')));
 
 // GET Route for notes page
-// app.get('/api/notes', (req, res) =>
-//   res.sendFile(path.join(__dirname, '/public/notes.html'))
+// app.get('/notes', (req, res) =>
+//   res.sendFile(path.join(__dirname, '/notes.html'))
 // );
+app.get('api/notes', (req, res) => {
+  const notesFilePath = path.join(__dirname, 'public', 'notes.html');
+  res.sendFile(notesFilePath);
+});
+
+app.get('*', (req, res) => {
+  const indexPath = path.join(__dirname, 'index.html');
+  res.sendFile(indexPath);
+});
+// app.get('/', (req, res) => {
+//   res.sendFile(__dirname + '/index.html');
+// });
+
 
 app.post('./api', (req, res) => {
   res.json(`${req.method} request received to post`);
