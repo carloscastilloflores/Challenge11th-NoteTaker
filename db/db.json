@@ -1,11 +1,12 @@
 [
     {
         "title": "Create repository",
-        "text": "Describe the project with all the files"
+        "text": "Describe the project with all the files",
+        "id": "0000"
     },
     {
         "title": "Select diet",
         "text": "Create a meal plan for the following week",
-        "note_id": "ad85d942-0ed8-49b7-ba9e-9104c20d591e"
+        "id": "1234"
     }
 ]
