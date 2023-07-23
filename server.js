@@ -64,7 +64,7 @@ app.get("/api/notes", (req, res) => {
 //   }); 
 
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'html.html')); 
+  res.sendFile(path.join(__dirname, 'public', 'index.html')); 
 });
 
 app.get('/api/notes:id', (req, res) => {
@@ -81,52 +81,133 @@ app.get('/api/notes:id', (req, res) => {
     res.status(404).send('Note not found');
   } 
 });
-
-app.post('/api/notes', async (req, res) => {
-  console.info(`${req.method} request received`);
+//1 Not updating properly 
+// app.post('/api/notes', async (req, res) => {
+//   console.info(`${req.method} request received`);
   
-//Handles error in case the note is empty or misses a section
+// //Handles error in case the note is empty or misses a section
+//   const { title, text } = req.body;
+//   if (!title || !text) {
+//     return res.status(500).json('Error in posting Note');
+//   }
+
+//   const newNote = {
+//     title,
+//     text,
+//     id: uuid(),
+//   };
+
+//   try {
+//     const data = await fsPromises.readFile('./db/db.json', 'utf8');
+//     const parsedNotes = JSON.parse(data);
+//     parsedNotes.push(newNote);
+
+//     await fsPromises.writeFile('./db/db.json', JSON.stringify(parsedNotes, null, 4));
+//     console.info('Success');
+//     res.json(parsedNotes);
+//   } catch (err) {
+//     console.error(err);
+//     res.status(500).json('Error in posting Note');
+//   }
+// });
+//2. Trying to improve
+// app.post('/api/notes', (req, res)=>{
+//   console.info(`${req.method} request received`);
+//   const { title, text } = req.body;
+//   if (title && text) {
+//     const newNote = {
+//       title,
+//       text,
+//       id: uuid(),
+//     };
+//     fs.readFile('./db/db.json', 'utf8', (err, data) => {
+//       if (err) {
+//         console.error(err);
+//       } else {
+//         const parsedNotes = JSON.parse(data);
+//         parsedNotes.push(newNote);
+//         notes = parsedNotes
+//         console.log(parsedNotes)
+//         fs.writeFile('./db/db.json',JSON.stringify(parsedNotes, null, 4),
+//           (writeErr) =>
+//             writeErr
+//               ? console.error(writeErr)
+//               : console.info('success')
+//         );
+//         res.json(notes)
+//       }
+//     });
+//   } else {
+//     res.status(500).json('Error in posting Note');
+//   }
+// })
+
+app.post('/api/notes', (req, res)=>{
+  console.info(`${req.method} request received`);
   const { title, text } = req.body;
-  if (!title || !text) {
-    return res.status(500).json('Error in posting Note');
-  }
-
-  const newNote = {
-    title,
-    text,
-    id: uuid(),
-  };
-
-  try {
-    const data = await fsPromises.readFile('./db/db.json', 'utf8');
-    const parsedNotes = JSON.parse(data);
-    parsedNotes.push(newNote);
-
-    await fsPromises.writeFile('./db/db.json', JSON.stringify(parsedNotes, null, 4));
-    console.info('Success');
-    res.json(parsedNotes);
-  } catch (err) {
-    console.error(err);
+  if (title && text) {
+    const newNote = {
+      title,
+      text,
+      id: uuid(),
+    };
+    fs.readFile('./db/db.json', 'utf8', (err, data) => {
+      if (err) {
+        console.error(err);
+      } else {
+        const parsedNotes = JSON.parse(data);
+        parsedNotes.push(newNote);
+        notes = parsedNotes
+        console.log(parsedNotes)
+        fs.writeFile('./db/db.json',JSON.stringify(parsedNotes, null, 4),
+          (writeErr) =>
+            writeErr
+              ? console.error(writeErr)
+              : console.info('success')
+        );
+        res.json(notes)
+     }
+    });
+  } else {
     res.status(500).json('Error in posting Note');
   }
-});
+})
 
-app.delete('/api/notes/:id', async (req, res) => {
-  try {
-    const data = await fsPromises.readFile('./db/db.json', 'utf8');
-    const parsedNotes = JSON.parse(data);
-
-    const deletedNoteId = req.params.id;
-    const updatedNotes = parsedNotes.filter(note => note.id !== deletedNoteId);
-
-    await fsPromises.writeFile('./db/db.json', JSON.stringify(updatedNotes, null, 4));
-    console.info('Successfully updated Notes!');
+app.delete("/api/notes/:id", (req, res) => {
+   // Read the contents of the 'db.json' file asynchronously
+  fs.readFile("./db/db.json", "utf8", (error, data) => {
+    if (error) {
+      console.error(error);
+       // If there's an error reading the file, send a 500 (Internal Server Error) response with an error message
+      return res.status(500).json({ message: "Error reading data" });
+    }
+    const deleteId = req.params.id;
+    console.log("ID to be deleted: ", deleteId);
+    // Parse the contents of 'db.json' into an array of notes
+    const notesArray = JSON.parse(data);
     
-    res.json(updatedNotes);
-  } catch (err) {
-    console.error(err);
-    res.status(500).json('Error in deleting Note');
-  }
+    // Find the index of the note to be deleted using the specified deleteId
+    const indexToDelete = notesArray.findIndex((note) => note.id === deleteId);
+    if (indexToDelete === -1) {
+    // If the specified note's ID is not found in the array, send a 404 (Not Found) response with an error message
+      return res.status(404).json({ message: "Note not found" });
+    }
+    // Remove the note from the array using the indexToDelete
+    notesArray.splice(indexToDelete, 1)
+    // Update the 'notes' variable with the modified 'notesArray';
+    notes = notesArray
+     // Write the modified 'notesArray' back to the 'db.json' file
+    fs.writeFile("./db/db.json", JSON.stringify(notesArray, null, 4), (writeErr) => {
+      if (writeErr) {
+        console.error(writeErr);
+         // If there's an error writing the file, send a 500 (Internal Server Error) response with an error message
+        return res.status(500).json({ message: "Error updating data" });
+      }
+      console.info('Successfully updated');
+      // Send the modified 'notesArray' as the response in JSON format
+      res.json(notesArray);
+    });
+  });
 });
 
 app.listen(PORT, () =>
